@@ -130,5 +130,6 @@ dmypy.json
 
 
 # Credentials
-config.py
+backup/
 temp.py
+data.json

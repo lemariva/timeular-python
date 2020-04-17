@@ -1,8 +1,0 @@
-credentials = {
-  "apiKey": "",
-  "apiSecret": ""
-}
-
-device_config = {
-  "devMac": "dc:c2:83:24:bb:49"
-}

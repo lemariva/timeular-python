@@ -9,6 +9,12 @@ import json
 from functools import wraps
 from datetime import datetime
 
+import logging
+_log = logging.getLogger(__name__)
+_log.addHandler(logging.StreamHandler())
+_log.setLevel(logging.NOTSET)
+
+
 def check_token(f):
     @wraps(f)
     def wrapper(self, *args, **kwargs):
@@ -34,7 +40,7 @@ class API(object):
     
     def _make_response(self, route='', method='get', json_data={}, need_auth=True, headers={}):
         if method not in self._METHODS:
-            print('[%s] is not allowed' % method)
+            _log.info('[%s] is not allowed' % method)
             return False
         url = self._base_url + route
         
@@ -45,9 +51,10 @@ class API(object):
 
         if response.status_code < self._CLASS_STATUS_CODES[0] or \
             response.status_code > self._CLASS_STATUS_CODES[1]:
-            print('code error: %d' % response.status_code)
-            print('[%s]: %s' % (url, response.text))
-            return False
+            _log.info('code error: %d' % response.status_code)
+            _log.info('[%s]: %s' % (url, response.text))
+            return {"status_code": response.status_code, "message": response.text}
+
         return response.json()
 
 class Timeular(API):
@@ -162,7 +169,7 @@ class Devices(API):
     @check_token
     def patch(self, device_serial, json={}):
         route = '/%s' % str(device_serial)
-        return self._make_response(route, method='patch', json=json)
+        return self._make_response(route, method='patch', json_data=json)
 
     @check_token
     def delete(self, device_serial):
@@ -203,18 +210,18 @@ class Tracking(API):
     def post_start(self, activity_id):
         route = '/%s/start' % str(activity_id)
         datetime = get_current_time()
-        return self._make_response(route, method='post', json={'startedAt': datetime})
+        return self._make_response(route, method='post', json_data={'startedAt': datetime})
 
     @check_token
     def patch(self, activity_id, json={}):
         route = '/%s' % str(activity_id)
-        return self._make_response(route, method='patch', json=json)
+        return self._make_response(route, method='patch', json_data=json)
 
     @check_token
     def post_stop(self, activity_id):
         route = '/%s/stop' % str(activity_id)
         datetime = get_current_time()
-        return self._make_response(route, method='post', json={'stoppedAt': datetime})
+        return self._make_response(route, method='post', json_data={'stoppedAt': datetime})
 
 class TimeEntries(API):
     _BASE_URL = '/time-entries'
