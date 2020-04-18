@@ -62,6 +62,8 @@ class Timeular(API):
     devices = None
     tracking = None
     time_entries = None
+    tags_and_mentions = None
+
     _api_key = None
     _api_secret = None
 
@@ -75,6 +77,7 @@ class Timeular(API):
         self.devices = Devices(base_url, self._access_token)
         self.tracking = Tracking(base_url, self._access_token)
         self.time_entries = TimeEntries(base_url, self._access_token)
+        self.tags_and_mentions = TagMentions(base_url, self._access_token)
 
     def set_api_key(self, api_key):
         self._api_key = api_key
@@ -88,7 +91,7 @@ class Timeular(API):
                                 json_data={'apiKey': self._api_key, 
                                       'apiSecret': self._api_secret}, 
                                 need_auth=False)
-        if not result:
+        if "status_code" in result:
             return False
         self._access_token = result['token']
         return result
@@ -106,6 +109,17 @@ class Timeular(API):
         route = '/report/%s/%s?timezone=%s' % (str(start_timestamp), str(stop_timestamp), str(timezone))
         return self._make_response(route)
 
+
+class TagMentions(API):
+    _BASE_URL = '/tags-and-mentions'
+
+    def __init__(self, base_url, access_token):
+        super(TagMentions, self).__init__(base_url + self._BASE_URL, access_token)
+    
+    @check_token
+    def get(self):
+        return self._make_response()
+
 class Activities(API):
     _BASE_URL = '/activities'
 
@@ -115,6 +129,13 @@ class Activities(API):
     @check_token
     def get(self):
         return self._make_response()
+
+    @check_token
+    def get_activity_id(self, id):
+        activities = self._make_response()["activities"]
+        for activity in activities:
+            if activity["id"] == id:
+                return activity
 
     @check_token
     def get_activitity_side(self, side):

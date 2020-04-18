@@ -8,6 +8,10 @@ import tkinter.scrolledtext as tkScrollText
 from tkinter import messagebox
 from .modals.settings_modal import SettingsWindow
 
+import logging
+_log = logging.getLogger(__name__)
+_log.addHandler(logging.StreamHandler())
+_log.setLevel(logging.INFO)
 
 class BluetoothChatGUI(BluetoothBackend,GUIBackend):
     def __init__(self, root, message_queue, end_gui, start_message_awaiting,
@@ -67,31 +71,54 @@ class BluetoothChatGUI(BluetoothBackend,GUIBackend):
         self.menubar.add_cascade(label='Timeular',menu=self.timeular)
 
         # Logging display
-        self.log_display = tkScrollText.ScrolledText(root, width=80, height=5)
+        self.log_display = tkScrollText.ScrolledText(root, width=60, height=4)
         self.log_display.configure(state='disabled',font='helvetica 10')
-        self.log_display.grid(row=0, 
+        self.log_display.grid(row=7, 
             column=0, 
-            rowspan=5,
-            columnspan=80,
+            rowspan=4,
+            columnspan=60,
             sticky="nswe")
         self.log_display.bind("<1>", lambda event: self.log_display.focus_set())
 
-        #  Activity
-        tk.Label(root, text="Note:").grid(row=6, column=0, columnspan=5)
-        self.text_activity = tk.Entry(root)
-        self.text_activity.grid(row=7,
-            column=0,
-            columnspan=80,
+        #  Activity   
+        tk.Label(root, text="Actual Activity").grid(row=0, column=0, columnspan=35)
+        self.activity_name = tk.StringVar()
+        tk.Label(root, textvariable=self.activity_name).grid(row=1, column=0, columnspan=35)
+        self.activity_time = tk.StringVar()
+        tk.Label(root, textvariable=self.activity_time).grid(row=3, column=0, columnspan=35)
+
+        tk.Label(root, text="Note").grid(row=0, column=35, columnspan=30)
+        self.text_activity = tk.Text(root, width=30, height=2)
+        self.text_activity.grid(row=1,
+            rowspan=3,
+            column=35,
+            columnspan=30,
             sticky="nswe")
         self.text_activity.focus_set()
+
+        button = tk.Button(root, text="Save", 
+                        command=self.save_note_on_task).grid(row=4, column=35, columnspan=30)
+
+        # Connection
+        self.zei_connector = tk.StringVar()
+        tk.Label(root, textvariable=self.zei_connector).grid(row=20, column=0, columnspan=30)
+        self.zei_connector.set("Tracker not connected")
+        
+        self.timeular_status = tk.StringVar()
+        tk.Label(root, textvariable=self.timeular_status).grid(row=20, column=31, columnspan=30)
+        self.timeular_status.set("Timeular not connected")
 
         # Load settings
         self.octahedron_side = None
         self.activity_id = None
+        self.start_time = None
         self.read_data()
 
         # Timeular API connector
         self.timeular = None
+        
+        # Time start loop
+        self.root.after(2000, self.update_gui)
 
     def display_message_box(self, the_type, title, text):
         """
@@ -114,9 +141,7 @@ class BluetoothChatGUI(BluetoothBackend,GUIBackend):
     def display_message(self, message, data=None):
         """
         Display a message within our chat display widget.
-
-        Parameters
-        ----------
+check_ble_notification
         message : string
             The message to be displayed
         data : string, optional
@@ -153,9 +178,14 @@ class BluetoothChatGUI(BluetoothBackend,GUIBackend):
         """
         self.log_display.update_idletasks()  
 
-    def check_ble_notification(self):
-        if self.wait_for_notification():
-            self.root.after(2000, self.check_ble_notification)
+    def update_gui(self):
+        #_log.info("updating gui")
+        # ble notification update
+        
+        self.root.after(2000, self.update_gui)
+        self.check_tracker_notifications()
+        self.check_timeular_status()
+        self.check_activity_time()
 
     def create_setting_gui(self):
         settings = SettingsWindow(self.root, title='Settings')
@@ -171,7 +201,6 @@ class BluetoothChatGUI(BluetoothBackend,GUIBackend):
             if self.address_value:
                 try:
                     self.connect_to_zei(self.address_value, self.manage_received_notification)
-                    self.root.after(2000, self.check_ble_notification)
                     self.display_message('Connected Succesfully to {0}'.format(self.address_value))
                 except Exception as e:
                     self.display_message('Error: {0}'.format(e))

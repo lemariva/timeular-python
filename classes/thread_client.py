@@ -85,7 +85,7 @@ class ThreadedClient():
                 else:
                     message_buffer += data
             return message_buffer
-        except bt.btcommon.BluetoothError:
+        except Exception:
             self.connection_running = False
 
     def await_messages_thread(self):
