@@ -115,7 +115,7 @@ class BluetoothBackend():
         if devices:
             self.display_message('Found the following devices: ')
             for device in devices:
-                self.display_message('{0}', device.addr)
+                self.display_message('{0}: {1}'.format(device.addr, device.getValue(0x08)))
         else:
             self.display_message_box('showerror', 'Error', 'Unable to find any devices')
 
@@ -126,7 +126,7 @@ class BluetoothBackend():
         self.zei.set_handler(self.gui_handler)
         self.scanner = ZeiDiscovery(self.zei)
 
-    def wait_for_notification(self, timeout=1):
+    def wait_for_notification(self, timeout=0.5):
         if self.zei:
             try:
                 self.zei.waitForNotifications(timeout=timeout)
