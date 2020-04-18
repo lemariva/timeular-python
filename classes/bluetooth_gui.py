@@ -118,7 +118,7 @@ class BluetoothChatGUI(BluetoothBackend,GUIBackend):
         self.timeular = None
         
         # Time start loop
-        self.root.after(2000, self.update_gui)
+        self.root.after(5000, self.update_gui)
 
     def display_message_box(self, the_type, title, text):
         """
