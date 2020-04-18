@@ -1,5 +1,6 @@
 import tkinter as tk
 import json
+import webbrowser
 import struct
 from tkinter import filedialog
 from classes.bluetooth_backend import BluetoothBackend
@@ -52,6 +53,7 @@ class BluetoothChatGUI(BluetoothBackend,GUIBackend):
         self.file_menu = tk.Menu(self.menubar, tearoff=0)
         self.file_menu.add_command(label='Exit',command=self.end_gui)
         self.file_menu.add_command(label='Settings',command=self.create_setting_gui)
+        self.file_menu.add_command(label='Help',command=self.get_help)
 
         # Bluetooth Tab
         self.bt_menu = tk.Menu(self.menubar, tearoff=0)
@@ -207,3 +209,6 @@ check_ble_notification
                     self.display_message_box('showerror', 'Error', 'Connection Failed')
             if self.apikey_value and self.apisecret_value:
                 self.connect_to_timeular()
+    
+    def get_help(self):
+        webbrowser.open('https://lemariva.com/linker/timeular')
